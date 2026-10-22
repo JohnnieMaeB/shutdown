@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
+    "puppeteer-core": "^22.15.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -27,7 +28,8 @@
     "ios": "expo start --ios",
     "web": "node tools/build-web.mjs && node tools/serve-web.mjs",
     "test": "node tools/test-logic.mjs",
-    "web:build": "node tools/build-web.mjs"
+    "web:build": "node tools/build-web.mjs",
+    "test:web": "node tools/test-web.mjs"
   },
   "private": true
 }

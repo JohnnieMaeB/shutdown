@@ -57,6 +57,12 @@ npm test
 
 `npm test` runs `tools/test-logic.mjs` on plain Node (18 or newer): the phrase list rules, the show screen's type size, the emoji helpers, the colour contrast of every look, and a check that the web build loads.
 
+```bash
+npm run test:web
+```
+
+`npm run test:web` runs `tools/test-web.mjs`: it builds the web app, serves it on a spare port, and drives headless Chrome at phone size through 23 checks: install details and opening offline, the talk signal, the hand-over lock's timing (a tap, half a second, a full second, and the keyboard), type to speak keeping nothing, Save as phrase, and search. Screenshots land in `test-results/web/` (not committed). It uses the Chrome or Edge already installed, through `puppeteer-core`, which downloads no browser; set `CHROME_PATH` to choose one.
+
 ## Files
 
 | File | What it does |
@@ -76,3 +82,4 @@ npm test
 | `web/index.html`, `web/app.js`, `web/style.css` | The web app |
 | `web/sw.js`, `web/manifest.webmanifest` | Offline cache and install details |
 | `tools/build-web.mjs`, `tools/serve-web.mjs` | Build the web app's shared logic, and serve `web/` on port 5173 |
+| `tools/test-logic.mjs`, `tools/test-web.mjs` | `npm test` and `npm run test:web` |

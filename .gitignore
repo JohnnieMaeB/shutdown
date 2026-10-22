@@ -42,3 +42,6 @@ yarn-error.*
 
 # built by tools/build-web.mjs
 web/lib/
+
+# screenshots from npm run test:web
+test-results/
