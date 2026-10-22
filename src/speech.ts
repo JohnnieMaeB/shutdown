@@ -88,7 +88,8 @@ export function speak(text: string) {
   parts.forEach((p, i) => {
     const last = i === parts.length - 1;
     const end = () => { if (g === gen && last) setSpeaking(false); };
-    try { Speech.speak(p, { voice, rate: S.rate, pitch: S.pitch, onDone: end, onStopped: end, onError: end }); }
+    // Full volume, said outright: 7 of 12 interviewees find speech too quiet or unclear (Enhancements #7).
+    try { Speech.speak(p, { voice, rate: S.rate, pitch: S.pitch, volume: 1.0, onDone: end, onStopped: end, onError: end }); }
     catch (e) { console.warn('speak', e); end(); }
   });
 }

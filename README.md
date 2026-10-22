@@ -61,7 +61,7 @@ npm test
 npm run test:web
 ```
 
-`npm run test:web` runs `tools/test-web.mjs`: it builds the web app, serves it on a spare port, and drives headless Chrome at phone size through 23 checks: install details and opening offline, the talk signal, the hand-over lock's timing (a tap, half a second, a full second, and the keyboard), type to speak keeping nothing, Save as phrase, and search. Screenshots land in `test-results/web/` (not committed). It uses the Chrome or Edge already installed, through `puppeteer-core`, which downloads no browser; set `CHROME_PATH` to choose one.
+`npm run test:web` runs `tools/test-web.mjs`: it builds the web app, serves it on a spare port, and drives headless Chrome at phone size through 29 checks: install details and opening offline, the talk signal, the hand-over lock's timing (a tap, half a second, a full second, and the keyboard), type to speak keeping nothing, Save as phrase, and search. It also runs axe-core's WCAG 2.2 A and AA rules on six screens (the board, edit mode, a signal, the show screen, type, search results); any violation fails the run. Screenshots land in `test-results/web/` (not committed). It uses the Chrome or Edge already installed, through `puppeteer-core`, which downloads no browser; set `CHROME_PATH` to choose one.
 
 ## Files
 

@@ -1,7 +1,8 @@
 // The phrase board (docs/PLAN.md "First version" §2): the place switcher and one big tile per phrase. A tap puts the
 // phrase on the show screen. Edit mode adds move, delete and a new-phrase card; nothing else is ever in the way.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { announce } from '../a11y';
 import type { IconName } from '../art';
 import { GROUPS, SIGNALS, type Phrase } from '../content';
 import { useField } from '../fields';
@@ -11,6 +12,8 @@ import { R, useTheme } from '../theme';
 import { SIGNAL_COLORS } from '../tokens';
 import { Btn, Chip, Ico, Icon, IconBtn, Press, Row, T } from '../ui';
 import { Box, PhraseAdder } from './Inputs';
+
+const countWords = (n: number) => (n ? n + (n === 1 ? ' phrase' : ' phrases') : 'No phrases match.');
 
 /** Columns for the tiles: one on a phone, two once each column still holds about 16 em. */
 function useColumns() {
@@ -61,6 +64,13 @@ export function Board() {
   const [adding, setAdding] = useState(false);
   const query = useField('');
   const searching = !!query.value.trim();
+  // Screen readers hear the result count once typing pauses, not on every key.
+  const foundCount = searching ? searchPhrases(st.phrases, query.value).length : -1;
+  useEffect(() => {
+    if (foundCount < 0) return;
+    const h = setTimeout(() => announce(countWords(foundCount)), 700);
+    return () => clearTimeout(h);
+  }, [foundCount, query.value]);
   const list = inGroup(st.phrases, st.group);
   const groupName = GROUPS.find(g => g.key === st.group)?.name ?? '';
   const header = (
@@ -79,7 +89,7 @@ export function Board() {
     return (
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: t.gutter, paddingTop: 8, gap: 16 }}>
         {header}
-        <T v="caption" muted accessibilityLiveRegion="polite">{found.length ? found.length + (found.length === 1 ? ' phrase' : ' phrases') : 'No phrases match.'}</T>
+        <T v="caption" muted>{countWords(found.length)}</T>
         <View onLayout={cols.onLayout} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: cols.gap }}>
           {found.map(p => <PhraseTile key={p.id} p={p} width={cols.tileW} editing={false} first last place />)}
         </View>

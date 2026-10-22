@@ -21,7 +21,7 @@ import { loadVoices, stopSpeaking } from './src/speech';
 import { setEditing, setTyping, state, useApp } from './src/store';
 import { ThemeContext, makeTheme, useTheme } from './src/theme';
 import { Btn, T } from './src/ui';
-import { moreContrast, reduceMotion } from './src/a11y';
+import { hiddenFromReaders, moreContrast, reduceMotion } from './src/a11y';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 loadVoices(); // so the first Speak already uses the best voice
@@ -75,7 +75,9 @@ function Shell() {
   return (
     <View style={{ flex: 1, backgroundColor: t.c.canvas }}>
       <StatusBar style={t.dark ? 'light' : 'dark'} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* While the show or type screen covers the board, screen readers can't reach it (both platforms). */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        {...hiddenFromReaders(!!st.showing || st.typing)}>
         <View style={[s.topbar, { paddingTop: insets.top + 6, paddingHorizontal: t.gutter }]}>
           <T v="title" accessibilityRole="header">Shutdown</T>
           <Btn icon={st.editing ? 'check' : 'edit'} label={st.editing ? 'Done' : 'Edit'} height={48}

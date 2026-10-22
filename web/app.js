@@ -370,6 +370,7 @@ function speak(text) {
   const v = bestVoice();
   if (v) { u.voice = v; u.lang = v.lang; }
   u.rate = 0.95;
+  u.volume = 1.0; // full volume, like the phone app
   u.onend = u.onerror = () => setSpeaking(false);
   setSpeaking(true);
   synth.speak(u);

@@ -1,6 +1,7 @@
 // App state plus on-phone storage. Everything lives in expo-sqlite's key-value store: the phrases and the reading
 // settings. No account, nothing leaves the phone.
 import { useSyncExternalStore } from 'react';
+import { AccessibilityInfo } from 'react-native';
 import Storage from 'expo-sqlite/kv-store';
 import { DEFAULTS, LETTERS, PITCH_RANGE, RATE_RANGE, SIZES, type GroupKey, type Phrase, type Settings, type SignalKey } from './content';
 import { addPhrase, movePhrase, normalize, removePhrase } from './phrases';
@@ -82,6 +83,8 @@ export function setTyping(on: boolean) { state.typing = on; emit(); }
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 export function toast(msg: string) {
   state.toast = { msg, n: (state.toast?.n || 0) + 1 }; emit();
+  // Said aloud by VoiceOver and TalkBack (a11y.ts's announce(), called directly: a11y.ts imports this file).
+  try { AccessibilityInfo.announceForAccessibility(msg); } catch {}
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { state.toast = null; emit(); }, 3200);
 }

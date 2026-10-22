@@ -4,6 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, View, type TextInputInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { hiddenFromReaders } from '../a11y';
 import { GROUPS, MAX_PHRASE } from '../content';
 import { useField } from '../fields';
 import { speak, stopSpeaking } from '../speech';
@@ -30,7 +31,8 @@ function Typing() {
   const close = () => { stopSpeaking(); setTyping(false); };
   const save = () => { add({ e: '', text, group: st.group }); toast('Saved to ' + place + '.'); };
   return (
-    <View accessibilityViewIsModal style={[StyleSheet.absoluteFill, { backgroundColor: t.c.canvas }]}>
+    // Under the show screen (Show from here), it's hidden from screen readers too.
+    <View accessibilityViewIsModal {...hiddenFromReaders(!!st.showing)} style={[StyleSheet.absoluteFill, { backgroundColor: t.c.canvas }]}>
       <View style={[s.head, { paddingTop: insets.top + 8, paddingHorizontal: t.gutter, borderBottomColor: t.c.hairline }]}>
         <T v="title" accessibilityRole="header">Type</T>
         <Btn icon="close" label="Close" height={48} onPress={close} />

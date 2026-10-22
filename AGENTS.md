@@ -25,9 +25,14 @@ Run lint and typecheck before declaring any task done.
 
 ## Navigation & Routing
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+- **Shutdown does not use Expo Router yet.** It's one screen (`App.tsx`) with overlays (show, type, emoji picker) driven by state in `src/store.ts`. Don't add routes or `src/app/` for ordinary features; add an overlay the same way.
+- Expo Router comes in with one-tap start (docs/PLAN.md, Enhancements #9), because widgets, the Quick Settings tile, Shortcuts and NFC tags open the app through links such as `shutdown://signal/red`. When that happens, routes live in `src/app/`, every file there is a screen, and `_layout.tsx` files define navigators; import `Link`, `router` and `useLocalSearchParams` from `expo-router`. Docs: https://docs.expo.dev/router/introduction.md
+
+## This project's quirks
+
+- The web app (`web/`) is plain JavaScript, not Expo web. It shares `src/content.ts`, `phrases.ts`, `text.ts` and `tokens.ts` through `tools/build-web.mjs`, so keep those four free of React Native imports. A feature in one app usually needs the same change in the other.
+- Screen readers: use `announce()` from `src/a11y.ts`, never `accessibilityLiveRegion` (Android only). Anything covering the board must hide what's under it with `hiddenFromReaders()`, because `accessibilityViewIsModal` is iOS only.
+- Checks: `npx tsc --noEmit`, `npm test` and `npm run test:web` (headless Chrome, including axe-core accessibility checks).
 
 ## Building with EAS
 

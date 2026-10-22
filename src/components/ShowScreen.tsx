@@ -8,7 +8,7 @@ import { AccessibilityInfo, Animated, Easing, Share, StyleSheet, Text, View, use
 import { StatusBar } from 'expo-status-bar';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DUR, savedHaptic } from '../a11y';
+import { DUR, announce, savedHaptic } from '../a11y';
 import type { IconName } from '../art';
 import { SIGNALS } from '../content';
 import { speak, stopSpeaking, useSpeaking } from '../speech';
@@ -20,6 +20,7 @@ import { FadeIn, Icon, Press, T } from '../ui';
 
 /** How long Done must be held. */
 export const HOLD_MS = 1000;
+const HINT = 'Hold Done for a second to close.';
 
 export function ShowScreen() {
   const st = useApp();
@@ -39,7 +40,7 @@ function ShowingView({ s }: { s: Showing }) {
   useKeepAwake(); // the screen mustn't dim while someone is reading it
   useEffect(() => {
     savedHaptic(); // a light buzz says it's up, with no sound
-    AccessibilityInfo.announceForAccessibility(s.text);
+    announce(s.text);
     return () => stopSpeaking();
   }, [s.text]);
   const px = showSize(s.text.length, width - 32, height - insets.top - insets.bottom - 160);
@@ -58,14 +59,14 @@ function ShowingView({ s }: { s: Showing }) {
             style={[t.showText(px), { color: C.ink, textAlign: 'center' }]}>{t.spaced(s.text)}</Text>
         </View>
       </FadeIn>
-      {hint ? <T v="label" color={C.ink} style={{ textAlign: 'center', paddingVertical: 6 }} accessibilityLiveRegion="polite">Hold Done for a second to close.</T> : null}
+      {hint ? <T v="label" color={C.ink} style={{ textAlign: 'center', paddingVertical: 6 }}>{HINT}</T> : null}
       <View style={[s_.bar, { paddingBottom: insets.bottom + 12, borderTopColor: C.edge }]}>
         <ShowBtn ink={C.ink} icon={speaking ? 'stop' : 'speaker'} label={speaking ? 'Stop' : 'Speak'} onPress={() => (speaking ? stopSpeaking() : speak(s.text))} />
         {signal
           ? <ShowBtn ink={C.ink} icon="share" label="Send" onPress={send} a11y="Send this signal to someone" />
           : <ShowBtn ink={C.ink} icon="flip" label={flipped ? 'Turn back' : 'Flip'} onPress={() => setFlipped(f => !f)}
               a11y={flipped ? 'Turn the message back' : 'Flip the message for someone across from you'} />}
-        <HoldBtn ink={C.ink} onDone={close} onTooShort={() => setHint(true)} />
+        <HoldBtn ink={C.ink} onDone={close} onTooShort={() => { setHint(true); announce(HINT); }} />
       </View>
     </View>
   );

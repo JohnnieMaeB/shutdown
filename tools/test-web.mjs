@@ -46,6 +46,18 @@ const results = [];
 const check = (name, ok, extra = '') => { results.push({ ok: !!ok, line: (ok ? 'PASS ' : 'FAIL ') + name + (extra && !ok ? '  (' + extra + ')' : '') }); };
 const $hidden = (page, id) => page.evaluate(i => document.getElementById(i).hidden, id);
 
+/* Accessibility: axe-core's WCAG 2.0, 2.1 and 2.2 A and AA rules on whatever is on screen. Any violation fails,
+   with each rule and the elements it flagged. */
+const axeSource = fs.readFileSync(path.join(root, 'node_modules', 'axe-core', 'axe.min.js'), 'utf8');
+async function axeCheck(page, name) {
+  if (!(await page.evaluate(() => !!window.axe))) await page.addScriptTag({ content: axeSource });
+  const violations = await page.evaluate(async () => {
+    const r = await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] } });
+    return r.violations.map(v => v.id + ' [' + v.impact + ']: ' + v.nodes.slice(0, 3).map(n => n.target.join(' ')).join(', '));
+  });
+  check('axe: ' + name, !violations.length, violations.join(' | '));
+}
+
 const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-first-run', '--no-default-browser-check'] });
 try {
   const page = await browser.newPage();
@@ -59,6 +71,11 @@ try {
   await page.reload({ waitUntil: 'networkidle0' });
   await page.screenshot({ path: path.join(shots, '1-board.png') });
   check('board shows the four Main starters', await page.$$eval('#board .tile', t => t.length) === 4);
+  await axeCheck(page, 'board');
+  await page.click('#edit'); await sleep(150);
+  await page.click('#board .btn.full'); await sleep(150);
+  await axeCheck(page, 'edit mode with the new-phrase card');
+  await page.click('.adder .btn'); await page.click('#edit'); await sleep(150); // Cancel, then Done
 
   /* install and offline */
   check('manifest has 192 and 512 px icons', await page.evaluate(async () => {
@@ -88,6 +105,7 @@ try {
   const shapeW = await page.$eval('#show-shape', e => e.getBoundingClientRect().width);
   check('signal shape drawn big', shapeW >= 60, shapeW + 'px');
   await page.screenshot({ path: path.join(shots, '3-red.png') });
+  await axeCheck(page, 'red signal screen');
 
   /* hand-over lock */
   const box = await (await page.$('#done')).boundingBox();
@@ -113,8 +131,10 @@ try {
   const before = await page.evaluate(() => localStorage.getItem('shutdown.phrases'));
   await page.type('#type-text', 'The bus was late and I need a minute.');
   await page.screenshot({ path: path.join(shots, '5-type.png') });
+  await axeCheck(page, 'type screen');
   await page.click('#type-show'); await sleep(300);
   check('typed words go to the show screen', await page.evaluate(() => document.getElementById('show-text').textContent === 'The bus was late and I need a minute.'));
+  await axeCheck(page, 'show screen');
   await page.focus('#done'); await page.keyboard.press('Enter'); await sleep(200);
   check('back on the type screen with the words', await page.evaluate(() => !document.getElementById('type').hidden && !!document.getElementById('type-text').value));
   check('typing stored nothing', await page.evaluate(b => localStorage.getItem('shutdown.phrases') === b, before));
@@ -132,6 +152,7 @@ try {
   const found = await page.evaluate(() => ({ count: document.querySelector('.count-line')?.textContent, places: [...document.querySelectorAll('#board .place')].map(p => p.textContent) }));
   check('search finds "can\'t talk" in Main and Out', found.count === '2 phrases' && found.places.join() === 'Main,Out', JSON.stringify(found));
   await page.screenshot({ path: path.join(shots, '6-search.png') });
+  await axeCheck(page, 'search results');
   await page.click('#board .tile'); await sleep(200);
   check('a search result opens show mode', !(await $hidden(page, 'show')));
   await page.keyboard.press('Escape'); await sleep(150);

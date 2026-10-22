@@ -52,7 +52,8 @@ export function Toast() {
   if (!st.toast) return null;
   return (
     <View pointerEvents="none" style={[s.toastWrap, { bottom: insets.bottom + 96 }]}>
-      <View accessibilityLiveRegion="polite" accessibilityRole="alert" style={[s.toast, t.overlay]}>
+      {/* Spoken by toast() in store.ts, which works on both platforms; a live region here would be Android only. */}
+      <View style={[s.toast, t.overlay]}>
         <T v="label">{st.toast.msg}</T>
       </View>
     </View>
