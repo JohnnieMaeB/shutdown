@@ -124,4 +124,14 @@ test('every look: text 4.5:1 on canvas, surface and tint; primary button 4.5:1',
   assert.ok(contrast(ON_DANGER, DANGER) >= 4.5);
 });
 
+/* ---------- the web app's copy of the logic ---------- */
+// Build web/lib from src/ and load it as the browser would (ES modules), so a change that breaks the web build fails here.
+const { execFileSync } = await import('node:child_process');
+execFileSync(process.execPath, [path.join(root, 'tools', 'build-web.mjs')], { stdio: 'ignore' });
+const web = await import(new URL('../web/lib/phrases.js', import.meta.url).href);
+test('web build loads and matches', () => {
+  assert.equal(web.normalize(null).length, 12);
+  assert.deepEqual(web.normalize(null).map(p => p.text), P.normalize(null).map(p => p.text));
+});
+
 console.log(passed + ' passed' + (process.exitCode ? ', some failed' : ''));

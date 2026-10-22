@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Shutdown</title>
+  <meta name="description" content="One-tap words for when speech stops working.">
+  <meta name="theme-color" content="#F6EEE2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#201B17" media="(prefers-color-scheme: dark)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="top">
+      <h1>Shutdown</h1>
+      <button id="edit" class="btn" type="button"><span class="ico" data-icon="edit"></span><span class="lbl">Edit</span></button>
+    </header>
+    <nav class="groups" id="groups" aria-label="Places"></nav>
+    <main id="board" class="board"></main>
+  </div>
+
+  <div id="show" class="show" role="dialog" aria-modal="true" aria-labelledby="show-text" hidden>
+    <div class="msg" id="show-msg">
+      <span class="show-emoji" id="show-emoji" aria-hidden="true"></span>
+      <p class="show-text" id="show-text"></p>
+    </div>
+    <div class="show-bar">
+      <button type="button" class="show-btn" id="speak"><span class="ico" data-icon="speaker"></span><span class="lbl">Speak</span></button>
+      <button type="button" class="show-btn" id="flip" aria-label="Flip the message for someone across from you"><span class="ico" data-icon="flip"></span><span class="lbl">Flip</span></button>
+      <button type="button" class="show-btn" id="done"><span class="ico" data-icon="close"></span><span class="lbl">Done</span></button>
+    </div>
+  </div>
+
+  <dialog id="confirm" class="confirm" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">Delete this phrase?</h2>
+    <p id="confirm-text"></p>
+    <div class="row end">
+      <button type="button" class="btn" id="confirm-keep">Keep it</button>
+      <button type="button" class="btn danger" id="confirm-delete"><span class="ico" data-icon="delete"></span><span class="lbl">Delete</span></button>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div id="live" class="sr-only" aria-live="assertive"></div>
+  <noscript><p class="noscript">Shutdown needs JavaScript turned on.</p></noscript>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "//": "Tells Node that web/*.js are ES modules, as the browser loads them (used by npm test).",
+  "type": "module",
+  "private": true
+}

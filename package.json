@@ -25,8 +25,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "test": "node tools/test-logic.mjs"
+    "web": "node tools/build-web.mjs && node tools/serve-web.mjs",
+    "test": "node tools/test-logic.mjs",
+    "web:build": "node tools/build-web.mjs"
   },
   "private": true
 }

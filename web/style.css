@@ -1,0 +1,109 @@
+/* Shutdown web: the phone app's Warm paper look in CSS. Colours are set on :root by app.js from src/tokens.ts
+   (built into lib/tokens.js), so both apps share one palette. These defaults (Cream / Ember) show until then. */
+:root {
+  --canvas: #F6EEE2; --surface: #FFFBF5; --sunken: #EFE5D6; --raised: #FFFBF5; --card: #FFFBF5;
+  --ink: #17130F; --ink-muted: #4E443B; --accent: #9C4A0B; --on-accent: #FFFBF5; --accent-ink: #9C4A0B; --accent-tint: #F3E6D9;
+  --border-strong: #8C7F70; --hairline: #E3D6C4; --danger: #B42F1F; --on-danger: #FFFBF5;
+  --show-bg: #FFFFFF; --show-ink: #000000; --show-edge: #000000;
+  --shadow: 0 1px 2px rgba(23,19,15,.06), 0 4px 12px rgba(23,19,15,.06);
+  --fs: 1.125rem; /* 18 px at the browser's default size, like the phone app's Medium */
+  --gutter: 20px;
+  --ui: 'Lexend', system-ui, sans-serif;
+  --read: Verdana, 'Atkinson Hyperlegible', system-ui, sans-serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --canvas: #201B17; --surface: #2B2520; --sunken: #1A1612; --raised: #352F2B; --card: #352F2B; --ink: #F0E5DE; --ink-muted: #E2D2C6;
+    --accent: #FFB877; --on-accent: #4C2700; --accent-ink: #FFB877; --accent-tint: #443729; --border-strong: #9E8E82; --hairline: #44392F;
+    --show-bg: #000000; --show-ink: #FFFFFF; --show-edge: #FFFFFF; --shadow: none; }
+}
+@media (max-width: 379px) { :root { --gutter: 16px; } }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--canvas); color: var(--ink); font: 400 var(--fs)/1.7 var(--read); letter-spacing: .012em; -webkit-text-size-adjust: 100%; }
+button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
+h1, h2 { margin: 0; font-family: var(--ui); font-weight: 600; }
+h1 { font-size: calc(var(--fs) * 1.222); line-height: 1.3; }
+h2 { font-size: calc(var(--fs) * 1.222); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:focus-visible { outline: 3px solid var(--accent-ink); outline-offset: 2px; }
+
+#app { min-height: 100%; display: flex; flex-direction: column; max-width: 960px; margin: 0 auto; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px;
+  padding: calc(env(safe-area-inset-top) + 6px) var(--gutter) 6px; }
+
+/* Line icons: the phone app's PNGs used as masks, so they take the text colour. */
+.ico { width: 24px; height: 24px; flex: none; background: currentColor; -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
+
+/* Buttons and chips (Lexi §10). */
+.btn, .chip { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 6px 20px;
+  border-radius: 999px; border: 1px solid var(--border-strong); background: var(--card); font-family: var(--ui); font-weight: 500; line-height: 1.3; cursor: pointer; }
+.btn:active, .chip:active, .tile:active { opacity: .8; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 600; }
+.btn.danger { background: var(--danger); color: var(--on-danger); border-color: transparent; font-weight: 600; }
+.btn.full { width: 100%; min-height: 56px; }
+.btn.round { padding: 0; width: 48px; }
+.chip { padding: 6px 10px; gap: 6px; white-space: nowrap; }
+.chip[aria-pressed="true"] { background: var(--accent-tint); border: 2px solid var(--accent-ink); padding: 5px 9px; font-weight: 600; }
+.chip .e { font-size: 1.3em; line-height: 1; font-family: initial; }
+
+/* Wraps rather than scrolls sideways, so every place is on screen without having to know there are more. */
+.groups { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px var(--gutter); }
+
+.board { padding: 8px var(--gutter) calc(env(safe-area-inset-bottom) + 24px); display: flex; flex-direction: column; gap: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr)); gap: 12px; }
+.tile { display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: 72px; padding: 16px; border-radius: 20px;
+  background: var(--card); border: 1px solid var(--hairline); box-shadow: var(--shadow); text-align: left; }
+button.tile { cursor: pointer; }
+.tile .row1 { display: flex; align-items: center; gap: 14px; }
+.tile .e { font-size: calc(var(--fs) * 2); line-height: 1.22; font-family: initial; flex: none; }
+.tile .words { font-weight: 500; flex: 1; overflow-wrap: anywhere; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row.end { justify-content: flex-end; }
+.empty { text-align: center; color: var(--ink-muted); }
+
+/* The new-phrase card. */
+.adder { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1.5px dashed var(--border-strong); border-radius: 20px; }
+.adder .title { font-family: var(--ui); font-weight: 600; }
+.box { width: 100%; min-height: 48px; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--sunken); line-height: 1.7; }
+textarea.box { resize: vertical; min-height: calc(2 * 1.7em + 20px); }
+.box.emo { width: 4.2em; text-align: center; font-family: initial; }
+.err { color: var(--danger); font-family: var(--ui); }
+.count { color: var(--ink-muted); font-family: var(--ui); font-size: max(16px, calc(var(--fs) * .889)); }
+
+/* Emoji picker. */
+.picker { border-radius: 20px; background: var(--surface); border: 1px solid var(--border-strong); overflow: hidden; }
+.picker .tabs { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid var(--hairline); overflow-x: auto; }
+.picker .tabs button, .picker .cells button { border: 0; background: transparent; border-radius: 12px; cursor: pointer; font-family: initial; }
+.picker .tabs button { min-width: 48px; height: 48px; font-size: 26px; }
+.picker .tabs button[aria-pressed="true"] { background: var(--accent-tint); }
+.picker .cells { display: flex; flex-wrap: wrap; gap: 2px; padding: 8px; max-height: 240px; overflow-y: auto; }
+.picker .cells button { width: 52px; height: 52px; font-size: 32px; }
+.picker .cells button:hover { background: var(--accent-tint); }
+
+/* Show mode: the most contrast a screen can give, whatever the look. */
+.show { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; background: var(--show-bg); color: var(--show-ink); }
+.show[hidden] { display: none; }
+.msg { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 16px) 16px 16px; text-align: center; overflow: hidden; }
+.msg.flipped { transform: rotate(180deg); }
+.show-emoji { line-height: 1.1; font-family: initial; }
+.show-text { margin: 0; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; max-width: 100%; }
+.show-bar { display: flex; gap: 10px; padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px); border-top: 1px solid var(--show-edge); }
+.show-btn { flex: 1; min-height: 56px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px;
+  border: 2px solid var(--show-edge); border-radius: 999px; background: transparent; color: var(--show-ink); font-family: var(--ui); font-weight: 600; cursor: pointer; }
+.show-btn:focus-visible { outline-color: var(--show-ink); }
+@media (prefers-reduced-motion: no-preference) {
+  .show:not([hidden]) { animation: fade .15s ease-out; }
+  @keyframes fade { from { opacity: 0; } }
+}
+
+.confirm { border: 1px solid var(--border-strong); border-radius: 28px; padding: 24px; max-width: min(92vw, 28em); background: var(--surface); color: var(--ink); }
+.confirm::backdrop { background: rgba(0,0,0,.5); }
+.confirm p { margin: 12px 0 20px; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom) + 24px); z-index: 20;
+  padding: 12px 20px; border-radius: 999px; background: var(--ink); color: var(--canvas); font-family: var(--ui); max-width: calc(100vw - 32px); }
+.noscript { padding: 20px; }
