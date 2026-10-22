@@ -7,6 +7,10 @@
   <meta name="description" content="One-tap words for when speech stops working.">
   <meta name="theme-color" content="#F6EEE2" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#201B17" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="Shutdown">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@400;500;600&display=swap">
@@ -20,18 +24,51 @@
       <button id="edit" class="btn" type="button"><span class="ico" data-icon="edit"></span><span class="lbl">Edit</span></button>
     </header>
     <nav class="groups" id="groups" aria-label="Places"></nav>
+    <section class="quick" aria-label="Type and talk signal">
+      <div class="row">
+        <button type="button" class="btn" id="type-open" aria-label="Type something to show or say"><span class="ico" data-icon="keyboard"></span><span class="lbl">Type</span></button>
+        <span id="signals" class="row"></span>
+      </div>
+      <div class="search">
+        <span class="ico" data-icon="search" aria-hidden="true"></span>
+        <input id="search" class="box" type="search" placeholder="Search all phrases" aria-label="Search all phrases" autocomplete="off" spellcheck="false">
+      </div>
+    </section>
     <main id="board" class="board"></main>
+  </div>
+
+  <div id="type" class="sheet" role="dialog" aria-modal="true" aria-labelledby="type-title" hidden>
+    <header class="sheet-head">
+      <h2 id="type-title">Type</h2>
+      <button type="button" class="btn" id="type-close"><span class="ico" data-icon="close"></span><span class="lbl">Close</span></button>
+    </header>
+    <div class="sheet-body">
+      <textarea id="type-text" class="box big" rows="4" maxlength="140" placeholder="Type what you want to say" aria-label="Type what you want to say"></textarea>
+      <div class="row">
+        <button type="button" class="btn primary grow" id="type-show">Show</button>
+        <button type="button" class="btn grow" id="type-speak"><span class="ico" data-icon="speaker"></span><span class="lbl">Speak</span></button>
+      </div>
+      <div class="row">
+        <button type="button" class="btn" id="type-save"><span class="ico" data-icon="add"></span><span class="lbl">Save as phrase</span></button>
+        <button type="button" class="btn" id="type-clear"><span class="ico" data-icon="delete"></span><span class="lbl">Clear</span></button>
+      </div>
+      <p class="note">Nothing you type here is kept unless you save it as a phrase.</p>
+    </div>
   </div>
 
   <div id="show" class="show" role="dialog" aria-modal="true" aria-labelledby="show-text" hidden>
     <div class="msg" id="show-msg">
       <span class="show-emoji" id="show-emoji" aria-hidden="true"></span>
+      <span class="show-shape ico" id="show-shape" aria-hidden="true" hidden></span>
       <p class="show-text" id="show-text"></p>
     </div>
+    <p class="hold-hint" id="hold-hint" role="status" hidden>Hold Done for a second to close.</p>
     <div class="show-bar">
       <button type="button" class="show-btn" id="speak"><span class="ico" data-icon="speaker"></span><span class="lbl">Speak</span></button>
       <button type="button" class="show-btn" id="flip" aria-label="Flip the message for someone across from you"><span class="ico" data-icon="flip"></span><span class="lbl">Flip</span></button>
-      <button type="button" class="show-btn" id="done"><span class="ico" data-icon="close"></span><span class="lbl">Done</span></button>
+      <button type="button" class="show-btn" id="send" aria-label="Send this signal to someone" hidden><span class="ico" data-icon="share"></span><span class="lbl">Send</span></button>
+      <button type="button" class="show-btn hold" id="done" aria-describedby="done-hint"><span class="fill" aria-hidden="true"></span><span class="ico" data-icon="close"></span><span class="lbl">Done</span></button>
+      <span id="done-hint" class="sr-only">Press and hold to close.</span>
     </div>
   </div>
 

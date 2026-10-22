@@ -13,8 +13,10 @@ Show or say a short message within seconds of taking out the phone, while overlo
 1. **One-tap start:** Android Quick Settings tile and home-screen shortcut; iOS widget and Action button shortcut. Not built yet.
 2. **Phrase board:** 12 starter phrases as large emoji-and-word tiles, grouped by place (Main, Out, Health, Work, Home); editable. Built.
 3. **Show mode by default:** the phrase fills the screen in big high-contrast text; Speak is one more tap; Flip for someone across a table. Built.
-4. **Type to speak:** one text box with suggestions from your own past phrases. Not built yet.
-5. **Talk signal:** green, yellow and red cards, and a ready-made text to a trusted person through the share sheet. Not built yet.
+4. **Type to speak:** one text box with Show and Speak. Changed after research: nothing typed is kept unless you tap "Save as phrase" (6 of 12 autistic AAC users never accept automatic learning). Built.
+5. **Talk signal:** green, yellow and red cards in the community badge colours, each with a shape, and a ready-made text to a trusted person through the share sheet. Built.
+
+Also built from the Enhancements tab: an installable offline web app, the hand-over lock (hold Done for a second), and search across all places.
 6. **Low-demand design:** no streaks, reminders or badges; a light buzz instead of sounds; large touch targets. Built into what exists.
 
 ## Testing with autistic adults

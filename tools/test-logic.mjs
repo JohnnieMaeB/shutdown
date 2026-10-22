@@ -83,6 +83,30 @@ test('move swaps within the group and skips other groups', () => {
   assert.equal(P.movePhrase(list, 'nope', 1), list);
 });
 
+/* ---------- search ---------- */
+test('search finds every typed word, in any place, ignoring case, accents and apostrophes', () => {
+  const list = base();
+  assert.deepEqual(P.searchPhrases(list, 'QUIET').map(p => p.group), ['main']);
+  assert.equal(P.searchPhrases(list, 'cant talk').length, 2); // main and out, typed without the apostrophe
+  assert.equal(P.searchPhrases(list, 'talk  hear').length, 1); // both words, any order
+  assert.deepEqual(P.searchPhrases(list, '   '), []);
+  assert.deepEqual(P.searchPhrases(list, 'zebra'), []);
+  assert.equal(P.searchPhrases([{ id: 'x', e: '', text: 'Café noise', group: 'out' }], 'cafe').length, 1);
+});
+
+/* ---------- talk signal ---------- */
+const { SIGNALS } = load('content');
+const { SIGNAL_COLORS } = load('tokens');
+test('three signals in badge order, each with its own shape and 7:1 colours', () => {
+  assert.deepEqual(SIGNALS.map(s => s.key), ['green', 'yellow', 'red']);
+  assert.equal(new Set(SIGNALS.map(s => s.shape)).size, 3);
+  for (const s of SIGNALS) {
+    const c = SIGNAL_COLORS[s.key];
+    assert.ok(contrast(c.ink, c.bg) >= 7, s.key + ' ' + contrast(c.ink, c.bg).toFixed(2));
+    assert.ok(s.share.toLowerCase().includes(s.key));
+  }
+});
+
 /* ---------- show screen type size ---------- */
 test('short phrases are big, long ones smaller, never under 28 px or over 72 px', () => {
   const [w, h] = [360, 600];

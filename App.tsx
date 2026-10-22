@@ -15,9 +15,10 @@ import { AtkinsonHyperlegible_700Bold } from '@expo-google-fonts/atkinson-hyperl
 import { Board, GroupBar } from './src/components/Board';
 import { EmojiPicker, Toast } from './src/components/Overlays';
 import { ShowScreen } from './src/components/ShowScreen';
+import { TypeScreen } from './src/components/TypeScreen';
 import { closeEmoji, getEmojiTarget } from './src/fields';
 import { loadVoices, stopSpeaking } from './src/speech';
-import { setEditing, show, state, useApp } from './src/store';
+import { setEditing, setTyping, state, useApp } from './src/store';
 import { ThemeContext, makeTheme, useTheme } from './src/theme';
 import { Btn, T } from './src/ui';
 import { moreContrast, reduceMotion } from './src/a11y';
@@ -51,12 +52,14 @@ function Themed() {
   );
 }
 
-/** Android back: close the show screen, then the emoji picker, then leave edit mode. */
+/** Android back: does nothing on the show screen (the hand-over lock: only holding Done closes it), then closes
+ *  the emoji picker, the type screen, and edit mode. */
 function useBackButton() {
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (state.showing) { stopSpeaking(); show(null); return true; }
+      if (state.showing) return true;
       if (getEmojiTarget()) { closeEmoji(); return true; }
+      if (state.typing) { stopSpeaking(); setTyping(false); return true; }
       if (state.editing) { setEditing(false); return true; }
       return false;
     });
@@ -85,6 +88,7 @@ function Shell() {
         </View>
       </KeyboardAvoidingView>
       <EmojiPicker />
+      <TypeScreen />
       <ShowScreen />
       <Toast />
     </View>

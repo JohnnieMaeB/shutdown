@@ -20,6 +20,9 @@ const ICONS = {
   chevron: ['M6 9L12 15L18 9'],
   flip: ['M23 4V10H17', 'M1 20V14H7', 'M3.51 9A9 9 0 0 1 18.36 5.64L23 10', 'M1 14L5.64 18.36A9 9 0 0 0 20.49 15'],
   edit: ['M12 20H21', 'M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L7 19L3 20L4 17Z'],
+  share: ['M4 12V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V12', 'M16 6L12 2L8 6', 'M12 2V15'],
+  search: ['circle 11 11 8', 'M21 21L16.65 16.65'],
+  keyboard: ['M4 5H20A2 2 0 0 1 22 7V17A2 2 0 0 1 20 19H4A2 2 0 0 1 2 17V7A2 2 0 0 1 4 5Z', 'M6 9H6.01', 'M10 9H10.01', 'M14 9H14.01', 'M18 9H18.01', 'M6 13H6.01', 'M18 13H18.01', 'M10 13H14', 'M7 16H17'],
   settings: ['M4 21V14', 'M4 10V3', 'M12 21V12', 'M12 8V3', 'M20 21V16', 'M20 12V3', 'M1 14H7', 'M9 8H15', 'M17 16H23'],
 };
 
@@ -146,14 +149,21 @@ function chunk(type, data) {
   const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td));
   return Buffer.concat([len, td, crc]);
 }
-function png(size, cover) {
+/** White art on transparent (tinted in the app), or with `bg` (an [r, g, b]) white art on a solid square. */
+function png(size, cover, bg) {
   const raw = Buffer.alloc(size * (size * 4 + 1));
   for (let y = 0; y < size; y++) {
     raw[y * (size * 4 + 1)] = 0;
     for (let x = 0; x < size; x++) {
       const o = y * (size * 4 + 1) + 1 + x * 4;
-      raw[o] = raw[o + 1] = raw[o + 2] = 255;
-      raw[o + 3] = Math.round(Math.min(1, cover[y * size + x]) * 255);
+      const c = Math.min(1, cover[y * size + x]);
+      if (bg) {
+        for (let i = 0; i < 3; i++) raw[o + i] = Math.round(bg[i] * (1 - c) + 255 * c);
+        raw[o + 3] = 255;
+      } else {
+        raw[o] = raw[o + 1] = raw[o + 2] = 255;
+        raw[o + 3] = Math.round(c * 255);
+      }
     }
   }
   const ihdr = Buffer.alloc(13);
@@ -162,11 +172,39 @@ function png(size, cover) {
 }
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-function write(dir, name, size, view, art) {
-  const out = path.join(root, 'assets', dir);
+function write(dir, name, size, view, art, bg) {
+  const out = path.join(root, dir);
   fs.mkdirSync(out, { recursive: true });
-  fs.writeFileSync(path.join(out, name + '.png'), png(size, render(size, view, art)));
+  fs.writeFileSync(path.join(out, name + '.png'), png(size, render(size, view, art), bg));
 }
 // Icons show at 24 px: 96 px covers 3× screens with room for the phone's text size.
-for (const [name, d] of Object.entries(ICONS)) write('icons', name, 96, 24, { stroke: d, width: 2 });
-console.log('wrote', Object.keys(ICONS).length, 'icons');
+for (const [name, d] of Object.entries(ICONS)) write('assets/icons', name, 96, 24, { stroke: d, width: 2 });
+// Talk signal shapes, filled, so a colour never carries the meaning alone: circle, triangle, square.
+const SIGNALS = {
+  'signal-green': ['circle 12 12 10'],
+  'signal-yellow': ['M12 2.5L22.5 21H1.5Z'],
+  'signal-red': ['M3 3H21V21H3Z'],
+};
+for (const [name, d] of Object.entries(SIGNALS)) write('assets/icons', name, 96, 24, { fill: d });
+
+// The app icon: a speech bubble with two lines of text, on the Cream look's accent (#9C4A0B). Drawn in a 32-unit box
+// so it sits inside the safe zones; the Android foreground uses a 44-unit box to fit the adaptive icon's circle.
+const BUBBLE = {
+  stroke: ['M8 9H24A3 3 0 0 1 27 12V20A3 3 0 0 1 24 23H14L9 27V23H8A3 3 0 0 1 5 20V12A3 3 0 0 1 8 9Z', 'M10 14H22', 'M10 18H17'], width: 2.4,
+};
+// The same bubble moved 6 units in, for a 44-unit box.
+const BUBBLE_44 = {
+  stroke: ['M14 15H30A3 3 0 0 1 33 18V26A3 3 0 0 1 30 29H20L15 33V29H14A3 3 0 0 1 11 26V18A3 3 0 0 1 14 15Z', 'M16 20H28', 'M16 24H23'], width: 2.4,
+};
+const ACCENT = [0x9c, 0x4a, 0x0b];
+write('assets', 'icon', 1024, 32, BUBBLE, ACCENT);
+write('assets', 'splash-icon', 512, 32, BUBBLE, ACCENT);
+write('assets', 'favicon', 48, 32, BUBBLE, ACCENT);
+write('assets', 'android-icon-background', 512, 32, { stroke: [] }, ACCENT);
+write('assets', 'android-icon-foreground', 512, 44, BUBBLE_44);
+write('assets', 'android-icon-monochrome', 512, 44, BUBBLE_44);
+write('web/icons', 'icon-192', 192, 32, BUBBLE, ACCENT);
+write('web/icons', 'icon-512', 512, 32, BUBBLE, ACCENT);
+write('web/icons', 'icon-maskable-512', 512, 44, BUBBLE_44, ACCENT);
+write('web/icons', 'apple-touch-icon', 180, 32, BUBBLE, ACCENT);
+console.log('wrote', Object.keys(ICONS).length, 'icons,', Object.keys(SIGNALS).length, 'signal shapes and the app icons');

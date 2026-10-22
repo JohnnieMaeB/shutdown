@@ -25,6 +25,16 @@ export function normalize(raw: unknown): Phrase[] {
 
 export const inGroup = (list: Phrase[], g: GroupKey) => list.filter(p => p.group === g);
 
+/** Lower case, accents and apostrophes gone ("can't" finds "cant"), so typing fast while overloaded still matches. */
+export const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’'`]/g, '').toLowerCase();
+
+/** Phrases in any place containing every typed word (each word anywhere, in any order), in board order. */
+export function searchPhrases(list: Phrase[], query: string): Phrase[] {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  return list.filter(p => { const t = fold(p.text); return words.every(w => t.includes(w)); });
+}
+
 /** Adds at the end of its group's run, so the board's order doesn't jump around. */
 export function addPhrase(list: Phrase[], p: Omit<Phrase, 'id'>): Phrase[] {
   const text = p.text.trim().slice(0, MAX_PHRASE);

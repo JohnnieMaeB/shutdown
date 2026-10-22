@@ -13,7 +13,7 @@
     "android": {
       "package": "com.example.shutdown",
       "adaptiveIcon": {
-        "backgroundColor": "#E38100",
+        "backgroundColor": "#9C4A0B",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -30,6 +30,11 @@
       "expo-sqlite",
       "expo-font",
       "expo-splash-screen"
-    ]
+    ],
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#9C4A0B"
+    }
   }
 }

@@ -12,5 +12,11 @@ export const ICONS = {
   flip: require('../assets/icons/flip.png'),
   edit: require('../assets/icons/edit.png'),
   settings: require('../assets/icons/settings.png'),
+  share: require('../assets/icons/share.png'),
+  search: require('../assets/icons/search.png'),
+  keyboard: require('../assets/icons/keyboard.png'),
+  'signal-green': require('../assets/icons/signal-green.png'),
+  'signal-yellow': require('../assets/icons/signal-yellow.png'),
+  'signal-red': require('../assets/icons/signal-red.png'),
 } as const;
 export type IconName = keyof typeof ICONS;

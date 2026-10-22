@@ -30,6 +30,17 @@ export const STARTERS: Omit<Phrase, 'id'>[] = [
   { group: 'home', e: '🛋️', text: 'I need to be alone for a while.' },
 ];
 
+/** The talk signal: the green, yellow and red of the colour communication badges autistic events already use
+ *  (Autism Network International, ASAN), each with a shape so colour never carries the meaning alone. `share` is
+ *  the ready-made text for a trusted person; the person always sends it themselves. */
+export type SignalKey = 'green' | 'yellow' | 'red';
+export type Signal = { key: SignalKey; name: string; shape: 'circle' | 'triangle' | 'square'; text: string; share: string };
+export const SIGNALS: Signal[] = [
+  { key: 'green', name: 'Green', shape: 'circle', text: 'I can talk right now.', share: "Talk signal: green. I can talk right now." },
+  { key: 'yellow', name: 'Yellow', shape: 'triangle', text: 'A few words only, with people I know.', share: "Talk signal: yellow. I can manage a few words. Message me if you can." },
+  { key: 'red', name: 'Red', shape: 'square', text: "I can't talk right now. Please give me space.", share: "Talk signal: red. I can't talk right now. Please message instead of calling." },
+];
+
 /** Longest phrase a person can save: about what still fits the show screen in big type. */
 export const MAX_PHRASE = 140;
 

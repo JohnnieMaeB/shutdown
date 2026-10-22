@@ -2,12 +2,15 @@
 // phrase on the show screen. Edit mode adds move, delete and a new-phrase card; nothing else is ever in the way.
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import { GROUPS, type Phrase } from '../content';
-import { inGroup } from '../phrases';
-import { add, move, remove, setGroup, show, useApp } from '../store';
+import type { IconName } from '../art';
+import { GROUPS, SIGNALS, type Phrase } from '../content';
+import { useField } from '../fields';
+import { inGroup, searchPhrases } from '../phrases';
+import { add, move, remove, setGroup, setTyping, show, useApp } from '../store';
 import { R, useTheme } from '../theme';
-import { Btn, Chip, Ico, Icon, Press, T } from '../ui';
-import { PhraseAdder } from './Inputs';
+import { SIGNAL_COLORS } from '../tokens';
+import { Btn, Chip, Ico, Icon, IconBtn, Press, Row, T } from '../ui';
+import { Box, PhraseAdder } from './Inputs';
 
 /** Columns for the tiles: one on a phone, two once each column still holds about 16 em. */
 function useColumns() {
@@ -33,15 +36,59 @@ export function GroupBar() {
   );
 }
 
+/** Type, then the three talk signals (Enhancements #2, #4): always above the phrases, one tap each. */
+function QuickRow() {
+  const t = useTheme();
+  return (
+    <Row gap={8}>
+      <Btn icon="keyboard" label="Type" height={48} onPress={() => setTyping(true)} a11y="Type something to show or say" />
+      {SIGNALS.map(s => (
+        <Press key={s.key} onPress={() => show({ text: s.text, e: '', signal: s.key })} accessibilityRole="button"
+          accessibilityLabel={'Talk signal ' + s.name + ': ' + s.text}
+          style={[s_.signal, { backgroundColor: SIGNAL_COLORS[s.key].bg }]}>
+          <Icon name={('signal-' + s.key) as IconName} size={20} color={SIGNAL_COLORS[s.key].ink} />
+          <T v="label" w={600} color={SIGNAL_COLORS[s.key].ink}>{s.name}</T>
+        </Press>
+      ))}
+    </Row>
+  );
+}
+
 export function Board() {
   const t = useTheme();
   const st = useApp();
   const cols = useColumns();
   const [adding, setAdding] = useState(false);
+  const query = useField('');
+  const searching = !!query.value.trim();
   const list = inGroup(st.phrases, st.group);
   const groupName = GROUPS.find(g => g.key === st.group)?.name ?? '';
+  const header = (
+    <View style={{ gap: 12 }}>
+      <QuickRow />
+      {/* Search (Enhancements #5): looks across every place, so you don't have to remember where a phrase lives. */}
+      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+        <Box field={query} placeholder="Search all phrases" accessibilityLabel="Search all phrases" returnKeyType="search"
+          autoCorrect={false} style={{ flex: 1 }} />
+        {searching ? <IconBtn icon="close" label="Clear search" words="Clear" onPress={() => query.set('')} /> : null}
+      </View>
+    </View>
+  );
+  if (searching) {
+    const found = searchPhrases(st.phrases, query.value);
+    return (
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: t.gutter, paddingTop: 8, gap: 16 }}>
+        {header}
+        <T v="caption" muted accessibilityLiveRegion="polite">{found.length ? found.length + (found.length === 1 ? ' phrase' : ' phrases') : 'No phrases match.'}</T>
+        <View onLayout={cols.onLayout} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: cols.gap }}>
+          {found.map(p => <PhraseTile key={p.id} p={p} width={cols.tileW} editing={false} first last place />)}
+        </View>
+      </ScrollView>
+    );
+  }
   return (
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: t.gutter, paddingTop: 8, gap: 16 }}>
+      {header}
       <View onLayout={cols.onLayout} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: cols.gap }}>
         {list.map((p, i) => (
           <PhraseTile key={p.id} p={p} width={cols.tileW} editing={st.editing} first={i === 0} last={i === list.length - 1} />
@@ -59,13 +106,17 @@ export function Board() {
   );
 }
 
-function PhraseTile({ p, width, editing, first, last }: { p: Phrase; width?: number; editing: boolean; first: boolean; last: boolean }) {
+function PhraseTile({ p, width, editing, first, last, place }: { p: Phrase; width?: number; editing: boolean; first: boolean; last: boolean; place?: boolean }) {
   const t = useTheme();
   const emojiPx = Math.round(t.fs * 2);
   const body = (
     <View style={s.row}>
       {p.e ? <Ico e={p.e} size={emojiPx} /> : null}
-      <T v="body" w={500} raw style={{ flex: 1 }}>{p.text}</T>
+      <View style={{ flex: 1 }}>
+        <T v="body" w={500} raw>{p.text}</T>
+        {/* Search results say which place each phrase lives in. */}
+        {place ? <T v="caption" muted>{GROUPS.find(g => g.key === p.group)?.name}</T> : null}
+      </View>
     </View>
   );
   if (!editing) {
@@ -109,4 +160,7 @@ const s = StyleSheet.create({
   tile: { padding: 16, borderRadius: R.lg, justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   round: { minWidth: 48, height: 48, borderRadius: R.full, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+});
+const s_ = StyleSheet.create({
+  signal: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 48, paddingHorizontal: 12, borderRadius: R.full },
 });

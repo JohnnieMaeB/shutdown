@@ -1,7 +1,7 @@
 // Warm paper colour tokens (from Lexi's docs/DESIGN_WARM_PAPER.md §1), plus the show screen's own colours.
 // Plain data with no React Native imports, so tools/test-logic.mjs can check every text pair for contrast.
 // theme.ts turns these into styles.
-import type { ThemeKey } from './content';
+import type { SignalKey, ThemeKey } from './content';
 
 export type LookKey = Exclude<ThemeKey, 'auto'>;
 export type Palette = {
@@ -57,6 +57,14 @@ export const LOOKS: Record<LookKey, Palette> = {
 export const SHOW = {
   light: { bg: '#FFFFFF', ink: '#000000', muted: '#3A3A3A', edge: '#000000' },
   dark: { bg: '#000000', ink: '#FFFFFF', muted: '#D0D0D0', edge: '#FFFFFF' },
+};
+
+/** The talk signal's screens: the same in every look, so they mean the same thing everywhere. Each pair is at
+ *  least 7:1 (tools/test-logic.mjs checks). */
+export const SIGNAL_COLORS: Record<SignalKey, { bg: string; ink: string }> = {
+  green: { bg: '#145A38', ink: '#FFFFFF' },
+  yellow: { bg: '#F5C518', ink: '#000000' },
+  red: { bg: '#A1221B', ink: '#FFFFFF' },
 };
 
 /** Danger is the same in every look, and always comes with an icon and a word. */

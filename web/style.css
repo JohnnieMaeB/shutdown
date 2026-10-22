@@ -52,6 +52,26 @@ h2 { font-size: calc(var(--fs) * 1.222); }
 /* Wraps rather than scrolls sideways, so every place is on screen without having to know there are more. */
 .groups { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px var(--gutter); }
 
+/* Type, the talk signals and search: always above the phrases. */
+.quick { display: flex; flex-direction: column; gap: 12px; padding: 8px var(--gutter) 0; }
+.signal { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 6px 12px; border-radius: 999px; border: 0;
+  background: var(--sig-bg); color: var(--sig-ink); font-family: var(--ui); font-weight: 600; cursor: pointer; }
+.signal .ico { width: 20px; height: 20px; }
+.search { position: relative; }
+.search .ico { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-muted); pointer-events: none; }
+.search .box { padding-left: 46px; }
+.place { display: block; color: var(--ink-muted); font-family: var(--ui); font-weight: 500; font-size: max(16px, calc(var(--fs) * .889)); }
+.count-line { margin: 0; color: var(--ink-muted); font-family: var(--ui); }
+.grow { flex: 1 1 8em; min-height: 56px; }
+.note { margin: 0; color: var(--ink-muted); font-family: var(--ui); font-size: max(16px, calc(var(--fs) * .889)); }
+
+/* The type screen: a full-screen sheet. */
+.sheet { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; background: var(--canvas); }
+.sheet[hidden] { display: none; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: calc(env(safe-area-inset-top) + 8px) var(--gutter) 10px; border-bottom: 1px solid var(--hairline); }
+.sheet-body { display: flex; flex-direction: column; gap: 16px; padding: var(--gutter); overflow-y: auto; max-width: 960px; width: 100%; margin: 0 auto; }
+.box.big { font-size: calc(var(--fs) * 1.333); line-height: 1.4; min-height: calc(4 * 1.4em + 20px); }
+
 .board { padding: 8px var(--gutter) calc(env(safe-area-inset-bottom) + 24px); display: flex; flex-direction: column; gap: 16px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr)); gap: 12px; }
 .tile { display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: 72px; padding: 16px; border-radius: 20px;
@@ -95,6 +115,14 @@ textarea.box { resize: vertical; min-height: calc(2 * 1.7em + 20px); }
 .show-btn { flex: 1; min-height: 56px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px;
   border: 2px solid var(--show-edge); border-radius: 999px; background: transparent; color: var(--show-ink); font-family: var(--ui); font-weight: 600; cursor: pointer; }
 .show-btn:focus-visible { outline-color: var(--show-ink); }
+.show-btn[hidden] { display: none; }
+.show-shape { color: var(--show-ink); }
+.hold-hint { margin: 0; padding: 6px 16px; text-align: center; font-family: var(--ui); font-weight: 600; }
+/* The hand-over lock: Done fills while held. */
+.show-btn.hold { position: relative; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.show-btn.hold > :not(.fill) { position: relative; }
+.show-btn.hold .fill { position: absolute; inset: 0; width: 0; background: var(--show-ink); opacity: .25; }
+.show-btn.hold.holding .fill { width: 100%; transition: width 1s linear; }
 @media (prefers-reduced-motion: no-preference) {
   .show:not([hidden]) { animation: fade .15s ease-out; }
   @keyframes fade { from { opacity: 0; } }

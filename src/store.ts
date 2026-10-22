@@ -2,7 +2,7 @@
 // settings. No account, nothing leaves the phone.
 import { useSyncExternalStore } from 'react';
 import Storage from 'expo-sqlite/kv-store';
-import { DEFAULTS, LETTERS, PITCH_RANGE, RATE_RANGE, SIZES, type GroupKey, type Phrase, type Settings } from './content';
+import { DEFAULTS, LETTERS, PITCH_RANGE, RATE_RANGE, SIZES, type GroupKey, type Phrase, type Settings, type SignalKey } from './content';
 import { addPhrase, movePhrase, normalize, removePhrase } from './phrases';
 
 type State = {
@@ -10,10 +10,14 @@ type State = {
   phrases: Phrase[];
   group: GroupKey;
   editing: boolean;
-  /** The phrase on the show screen, or null. */
-  showing: { text: string; e: string } | null;
+  /** What's on the show screen: a phrase, typed words, or a talk signal. */
+  showing: Showing | null;
+  /** The type-to-speak screen is open. What's typed there lives only in that screen, never here. */
+  typing: boolean;
   toast: { msg: string; n: number } | null;
 };
+
+export type Showing = { text: string; e: string; signal?: SignalKey };
 
 const KEYS = { settings: 'shutdown.settings', phrases: 'shutdown.phrases' };
 
@@ -43,6 +47,7 @@ export const state: State = {
   group: 'main',
   editing: false,
   showing: null,
+  typing: false,
   toast: null,
 };
 
@@ -71,7 +76,8 @@ export const move = (id: string, dir: -1 | 1) => savePhrases(movePhrase(state.ph
 /* ---------- ui ---------- */
 export function setGroup(g: GroupKey) { state.group = g; emit(); }
 export function setEditing(on: boolean) { state.editing = on; emit(); }
-export function show(p: { text: string; e: string } | null) { state.showing = p; emit(); }
+export function show(p: Showing | null) { state.showing = p; emit(); }
+export function setTyping(on: boolean) { state.typing = on; emit(); }
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 export function toast(msg: string) {

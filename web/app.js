@@ -1,10 +1,10 @@
 // Shutdown web: the phone app's board, edit mode and show mode for a browser. The phrases, list rules, type size
 // and colours come from the phone app's own modules (lib/, built by tools/build-web.mjs), so the two can't drift.
 // Phrases are kept in this browser's localStorage only.
-import { EMOJI_SETS, GROUPS, MAX_PHRASE } from './lib/content.js';
-import { addPhrase, inGroup, movePhrase, normalize, removePhrase } from './lib/phrases.js';
+import { EMOJI_SETS, GROUPS, MAX_PHRASE, SIGNALS } from './lib/content.js';
+import { addPhrase, inGroup, movePhrase, normalize, removePhrase, searchPhrases } from './lib/phrases.js';
 import { firstEmoji, showSize, speechKey } from './lib/text.js';
-import { LOOKS, SHOW, resolveLook, withContrast } from './lib/tokens.js';
+import { LOOKS, SHOW, SIGNAL_COLORS, resolveLook, withContrast } from './lib/tokens.js';
 
 const $ = id => document.getElementById(id);
 const KEY = 'shutdown.phrases';
@@ -71,9 +71,12 @@ function renderGroups() {
   }, el('span', { class: 'e', 'aria-hidden': 'true' }, g.e), g.name)));
 }
 
-function tile(p, first, last) {
-  const top = el('span', { class: 'row1' }, p.e ? el('span', { class: 'e', 'aria-hidden': 'true' }, p.e) : null, el('span', { class: 'words' }, p.text));
-  if (!state.editing) {
+function tile(p, first, last, withPlace = false) {
+  const words = el('span', { class: 'words' }, p.text,
+    // Search results say which place each phrase lives in.
+    withPlace ? el('span', { class: 'place' }, GROUPS.find(g => g.key === p.group)?.name ?? '') : null);
+  const top = el('span', { class: 'row1' }, p.e ? el('span', { class: 'e', 'aria-hidden': 'true' }, p.e) : null, words);
+  if (!state.editing || withPlace) {
     return el('button', { type: 'button', class: 'tile', on: { click: () => openShow(p) } }, top);
   }
   return el('div', { class: 'tile' }, top,
@@ -92,6 +95,15 @@ function render() {
   edit.replaceChildren(icon(state.editing ? 'check' : 'edit'), label(state.editing ? 'Done' : 'Edit'));
   edit.setAttribute('aria-label', state.editing ? 'Done editing' : 'Edit phrases');
 
+  // Search (Enhancements #5) looks across every place.
+  const query = $('search').value;
+  if (query.trim()) {
+    const found = searchPhrases(state.phrases, query);
+    $('board').replaceChildren(
+      el('p', { class: 'count-line', role: 'status' }, found.length ? found.length + (found.length === 1 ? ' phrase' : ' phrases') : 'No phrases match.'),
+      el('div', { class: 'grid' }, found.map(p => tile(p, true, true, true))));
+    return;
+  }
   const list = inGroup(state.phrases, state.group);
   const name = GROUPS.find(g => g.key === state.group)?.name ?? '';
   const kids = [el('div', { class: 'grid' }, list.map((p, i) => tile(p, i === 0, i === list.length - 1)))];
@@ -183,23 +195,40 @@ function sizeShow() {
   const msg = $('show-msg');
   const w = msg.clientWidth - 32, h = msg.clientHeight - 32;
   const px = showSize(state.showing.text.length, w, h);
-  const text = $('show-text'), emoji = $('show-emoji');
-  emoji.style.fontSize = Math.round(px * 1.4) + 'px';
+  const text = $('show-text'), emoji = $('show-emoji'), shape = $('show-shape');
+  // The emoji or signal shape is drawn a bit bigger than the words, like the phone app.
+  const lead = size => {
+    emoji.style.fontSize = Math.round(size * 1.4) + 'px';
+    shape.style.width = shape.style.height = Math.round(size * 1.6) + 'px';
+  };
   // Step down if a long word or font still overflows; showSize() is close but can't measure.
   let size = px;
-  text.style.fontSize = size + 'px';
-  while (size > 20 && msg.scrollHeight > msg.clientHeight + 1) { size -= 2; text.style.fontSize = size + 'px'; emoji.style.fontSize = Math.round(size * 1.4) + 'px'; }
+  text.style.fontSize = size + 'px'; lead(size);
+  while (size > 20 && msg.scrollHeight > msg.clientHeight + 1) { size -= 2; text.style.fontSize = size + 'px'; lead(size); }
 }
+/** Shows a phrase or typed words ({ text, e }), or a talk signal ({ text, signal }) in its own colours and shape. */
 function openShow(p) {
   returnFocus = document.activeElement;
   state.showing = p; state.flipped = false;
+  const sig = p.signal ? SIGNAL_COLORS[p.signal] : null;
+  const showEl = $('show');
+  // A signal looks the same in every look; otherwise the show colours from applyLook() apply.
+  showEl.style.setProperty('--show-bg', sig ? sig.bg : '');
+  showEl.style.setProperty('--show-ink', sig ? sig.ink : '');
+  showEl.style.setProperty('--show-edge', sig ? sig.ink : '');
+  if (!sig) ['--show-bg', '--show-ink', '--show-edge'].forEach(v => showEl.style.removeProperty(v));
   $('show-text').textContent = p.text;
   $('show-emoji').textContent = p.e || '';
-  $('show-emoji').hidden = !p.e;
+  $('show-emoji').hidden = !p.e || !!sig;
+  $('show-shape').hidden = !sig;
+  if (sig) $('show-shape').style.setProperty('--icon', 'url(lib/icons/signal-' + p.signal + '.png)');
+  $('flip').hidden = !!sig;
+  $('send').hidden = !sig;
+  $('hold-hint').hidden = true;
   $('show-msg').classList.remove('flipped');
   $('flip').querySelector('.lbl').textContent = 'Flip';
-  $('show').hidden = false;
-  $('app').inert = true;
+  showEl.hidden = false;
+  $('app').inert = true; $('type').inert = true;
   sizeShow();
   buzz(); keepAwake(true); announce(p.text);
   $('done').focus();
@@ -208,11 +237,47 @@ function closeShow() {
   stopSpeaking();
   state.showing = null;
   $('show').hidden = true;
-  $('app').inert = false;
+  $('app').inert = false; $('type').inert = false;
   keepAwake(false);
   returnFocus?.focus?.();
 }
-$('done').addEventListener('click', closeShow);
+
+/* The hand-over lock (Enhancements #3): with a finger or mouse, Done must be held for a second, so someone holding
+   the phone can't wander into the app. A quick tap shows the hint. Keyboards and screen readers (a click with no
+   pointer press before it) close straight away; Escape does too. */
+const HOLD_MS = 1000;
+let holdTimer = 0, held = false, pressed = false;
+const done = $('done');
+function holdStart(e) {
+  if (e.button > 0) return;
+  pressed = true; held = false;
+  done.classList.add('holding');
+  try { done.setPointerCapture(e.pointerId); } catch {}
+  holdTimer = setTimeout(() => { held = true; done.classList.remove('holding'); buzz(); closeShow(); }, HOLD_MS);
+}
+function holdEnd() {
+  clearTimeout(holdTimer);
+  done.classList.remove('holding');
+}
+done.addEventListener('pointerdown', holdStart);
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => done.addEventListener(ev, holdEnd));
+done.addEventListener('contextmenu', e => e.preventDefault()); // a long press mustn't open the browser's menu
+done.addEventListener('click', () => {
+  if (!pressed) { closeShow(); return; } // keyboard or screen reader
+  pressed = false;
+  if (!held) $('hold-hint').hidden = false;
+});
+$('send').addEventListener('click', async () => {
+  const s = SIGNALS.find(x => x.key === state.showing?.signal);
+  if (!s) return;
+  try {
+    if (navigator.share) { await navigator.share({ text: s.share }); return; }
+    await navigator.clipboard.writeText(s.share);
+    toast('Copied. Paste it into a message.');
+  } catch (e) {
+    if (e?.name !== 'AbortError') toast("Couldn't share from this browser.");
+  }
+});
 $('flip').addEventListener('click', () => {
   state.flipped = !state.flipped;
   $('show-msg').classList.toggle('flipped', state.flipped);
@@ -223,9 +288,58 @@ $('speak').addEventListener('click', () => (speaking ? stopSpeaking() : speak(st
 addEventListener('resize', sizeShow);
 document.addEventListener('visibilitychange', () => { if (state.showing && document.visibilityState === 'visible') keepAwake(true); });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && state.showing) { e.preventDefault(); closeShow(); }
-  else if (e.key === 'Escape' && state.editing && !state.adding && !$('confirm').open) { state.editing = false; render(); }
+  if (e.key !== 'Escape') return;
+  if (state.showing) { e.preventDefault(); closeShow(); }
+  else if (!$('type').hidden) { e.preventDefault(); closeType(); }
+  else if (state.editing && !state.adding && !$('confirm').open) { state.editing = false; render(); }
 });
+
+/* ---------- type to speak (Enhancements #4) ----------
+   The words live only in the text box. Nothing is saved, logged or suggested from them; closing clears them.
+   "Save as phrase" is the one way to keep them, and it's a choice the person makes. */
+const typeBox = $('type-text');
+function syncType() {
+  const empty = !typeBox.value.trim();
+  ['type-show', 'type-speak', 'type-save'].forEach(id => { $(id).disabled = empty; });
+  $('type-clear').disabled = !typeBox.value;
+  const place = GROUPS.find(g => g.key === state.group)?.name ?? 'Main';
+  $('type-save').querySelector('.lbl').textContent = 'Save as phrase in ' + place;
+}
+function openType() {
+  typeBox.value = ''; syncType();
+  $('type').hidden = false; $('app').inert = true;
+  typeBox.focus();
+}
+function closeType() {
+  stopSpeaking();
+  typeBox.value = '';
+  $('type').hidden = true; $('app').inert = false;
+  $('type-open').focus();
+}
+typeBox.addEventListener('input', syncType);
+$('type-open').addEventListener('click', openType);
+$('type-close').addEventListener('click', closeType);
+$('type-show').addEventListener('click', () => openShow({ text: typeBox.value.trim(), e: '' }));
+$('type-speak').addEventListener('click', () => speak(typeBox.value));
+$('type-clear').addEventListener('click', () => { typeBox.value = ''; syncType(); typeBox.focus(); });
+$('type-save').addEventListener('click', () => {
+  const text = typeBox.value.trim();
+  if (!text) return;
+  save(addPhrase(state.phrases, { e: '', text, group: state.group }));
+  toast('Saved to ' + (GROUPS.find(g => g.key === state.group)?.name ?? 'Main') + '.');
+});
+
+/* ---------- talk signal (Enhancements #2) ---------- */
+function renderSignals() {
+  $('signals').replaceChildren(...SIGNALS.map(s => {
+    const b = el('button', { type: 'button', class: 'signal', 'aria-label': 'Talk signal ' + s.name + ': ' + s.text,
+      on: { click: () => openShow({ text: s.text, e: '', signal: s.key }) } }, icon('signal-' + s.key), s.name);
+    b.style.setProperty('--sig-bg', SIGNAL_COLORS[s.key].bg);
+    b.style.setProperty('--sig-ink', SIGNAL_COLORS[s.key].ink);
+    return b;
+  }));
+}
+$('search').addEventListener('input', () => render());
 
 /* ---------- speaking (Web Speech) ---------- */
 const synth = 'speechSynthesis' in window ? speechSynthesis : null;
@@ -267,4 +381,10 @@ synth?.addEventListener?.('voiceschanged', () => {});
 $('edit').addEventListener('click', () => { state.editing = !state.editing; state.adding = false; render(); });
 applyLook();
 setIcons();
+renderSignals();
 render();
+
+/* ---------- offline and installable (Enhancements #1) ---------- */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(e => console.warn('offline support unavailable', e));
+}
